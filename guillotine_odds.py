@@ -49,7 +49,7 @@ def load_dotenv() -> None:
 
 def fetch_json(url: str) -> dict:
     headers = {"User-Agent": "GuillotineOdds/0.1 (personal read-only tool)", "Accept": "application/json"}
-    s2, swid = os.getenv("ESPN_S2"), os.getenv("ESPN_SWID")
+    s2, swid = (os.getenv("ESPN_S2") or "").strip(), (os.getenv("ESPN_SWID") or "").strip()
     if s2 and swid:
         headers["Cookie"] = f"espn_s2={s2}; SWID={swid}"
     request = urllib.request.Request(url, headers=headers)
