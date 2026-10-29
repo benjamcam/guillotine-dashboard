@@ -1,0 +1,59 @@
+name: Refresh ESPN projections and publish dashboard
+
+on:
+  schedule:
+    # Run at :17 and :47 to avoid the top-of-hour Actions queue.
+    - cron: '17,47 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    env:
+      ESPN_S2: ${{ secrets.ESPN_S2 }}
+      ESPN_SWID: ${{ secrets.ESPN_SWID }}
+    steps:
+      - name: Check out dashboard source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Verify ESPN secrets are configured
+        id: credentials
+        run: |
+          if [ -z "$ESPN_S2" ] || [ -z "$ESPN_SWID" ]; then
+            echo "::notice::Waiting for ESPN_S2 and ESPN_SWID repository secrets; no deployment made."
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Calculate current week and build static snapshot
+        if: steps.credentials.outputs.ready == 'true'
+        run: python build_snapshot.py --output-dir dist
+
+      - name: Upload Pages artifact
+        if: steps.credentials.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        if: steps.credentials.outputs.ready == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
