@@ -1,0 +1,77 @@
+{
+  "league_id": "2031595556",
+  "season": 2026,
+  "week": 8,
+  "calculated_at_utc": "2026-10-29T01:12:24.699804+00:00",
+  "simulations": 50000,
+  "model_note": "Provisional position-level standard deviations; replace with historical ESPN projection residuals for calibrated odds.",
+  "teams": [
+    {
+      "team": "J!zz H' Krist",
+      "projected_points": 104.61,
+      "simulated_mean": 104.52,
+      "last_place_probability": 32.9
+    },
+    {
+      "team": "Nicolback",
+      "projected_points": 108.33,
+      "simulated_mean": 108.28,
+      "last_place_probability": 26.65
+    },
+    {
+      "team": "The Shannon Shart Michelles ",
+      "projected_points": 120.44,
+      "simulated_mean": 120.33,
+      "last_place_probability": 10.32
+    },
+    {
+      "team": "Dak n Balls",
+      "projected_points": 124.96,
+      "simulated_mean": 125.01,
+      "last_place_probability": 7.52
+    },
+    {
+      "team": "Next Door Nabers",
+      "projected_points": 126.26,
+      "simulated_mean": 126.26,
+      "last_place_probability": 6.76
+    },
+    {
+      "team": "If you ain't last you're first",
+      "projected_points": 128.15,
+      "simulated_mean": 128.02,
+      "last_place_probability": 5.65
+    },
+    {
+      "team": "All Barkley No Bite",
+      "projected_points": 135.31,
+      "simulated_mean": 135.19,
+      "last_place_probability": 3.13
+    },
+    {
+      "team": "President Parker Washington",
+      "projected_points": 134.53,
+      "simulated_mean": 134.64,
+      "last_place_probability": 3.07
+    },
+    {
+      "team": "TDs On My Only Fannins",
+      "projected_points": 135.36,
+      "simulated_mean": 135.33,
+      "last_place_probability": 2.9
+    },
+    {
+      "team": "Adams and Eve",
+      "projected_points": 150.19,
+      "simulated_mean": 150.08,
+      "last_place_probability": 0.59
+    },
+    {
+      "team": "Chet's Competitive Team",
+      "projected_points": 151.25,
+      "simulated_mean": 151.3,
+      "last_place_probability": 0.51
+    }
+  ],
+  "warnings": []
+}
