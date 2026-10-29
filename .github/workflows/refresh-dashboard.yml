@@ -1,8 +1,8 @@
 name: Refresh ESPN projections and publish dashboard
 on:
   schedule:
-    # Refresh every 5 minutes, the shortest GitHub Actions schedule interval.
-    - cron: '*/5 * * * *'
+    # Refresh every 15 minutes.
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 permissions:
   contents: read
