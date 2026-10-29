@@ -2,7 +2,7 @@
   "league_id": "2031595556",
   "season": 2026,
   "week": 8,
-  "calculated_at_utc": "2026-10-29T01:12:24.699804+00:00",
+  "calculated_at_utc": "2026-10-29T01:21:13.835597+00:00",
   "simulations": 50000,
   "model_note": "Provisional position-level standard deviations; replace with historical ESPN projection residuals for calibrated odds.",
   "teams": [

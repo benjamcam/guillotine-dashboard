@@ -69,11 +69,11 @@
     const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 
     async function loadOdds() {
+      const staticSnapshot = document.body.dataset.staticSnapshot === 'true';
       refreshButton.disabled = true;
-      refreshButton.innerHTML = '<span aria-hidden="true">↻</span> Calculating…';
+      refreshButton.innerHTML = staticSnapshot ? '<span aria-hidden="true">↻</span> Loading snapshot…' : '<span aria-hidden="true">↻</span> Calculating…';
       const week = weekSelect.value;
       const query = week ? `?week=${encodeURIComponent(week)}` : '';
-      const staticSnapshot = document.body.dataset.staticSnapshot === 'true';
       try {
         const response = await fetch(staticSnapshot ? './odds.json' : `/api/odds${query}`, {cache:'no-store'});
         const data = await response.json();
@@ -83,7 +83,7 @@
         renderError(error.message);
       } finally {
         refreshButton.disabled = false;
-        refreshButton.innerHTML = '<span aria-hidden="true">↻</span> Refresh odds';
+        refreshButton.innerHTML = staticSnapshot ? '<span aria-hidden="true">↻</span> Reload snapshot' : '<span aria-hidden="true">↻</span> Refresh odds';
       }
     }
 
