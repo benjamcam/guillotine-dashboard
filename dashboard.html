@@ -17,10 +17,23 @@
     @media(max-width:900px){.shell{padding:0 22px 34px}.content{grid-template-columns:minmax(0,1fr) 260px}.thead,.team-row{grid-template-columns:minmax(130px,1.4fr) .8fr 80px 105px;gap:8px;padding:0 14px}.spotlight{padding:17px}}
     @media(max-width:680px){.shell{padding:0 15px 28px}.topbar{height:62px}.top-right .top-caption{display:none}.hero{align-items:flex-start;flex-direction:column;gap:18px;padding:29px 0 20px}h1{font-size:29px}.controls{width:100%}.controls .select-wrap{flex:1}.controls select{width:100%}.strip{grid-template-columns:1fr 1fr}.stat{padding:13px 14px}.stat:first-child{grid-column:span 2}.content{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.spotlight{grid-column:span 2}.thead,.team-row{grid-template-columns:minmax(115px,1.2fr) .8fr 74px 82px;padding:0 10px;gap:5px}.thead{font-size:8px}.team-name{font-size:11px}.score,.risk{font-size:10px}.rank{width:21px;height:21px}.panel-head{padding:15px}.panel-note{font-size:10px}.footer{line-height:1.5;gap:10px}.footer span:last-child{text-align:right}}
     @media(max-width:390px){.thead,.team-row{grid-template-columns:minmax(95px,1.1fr) .7fr 65px 72px;gap:4px;padding:0 8px}.team-id{gap:6px}.row-risk{font-size:8px}}
-  .select-wrap{display:none}.method{display:none}
-    .thead,.team-row{grid-template-columns:minmax(0,1.45fr) 1fr 120px}.thead>:nth-child(3),.team-row>:nth-child(3){display:none}
-    @media(max-width:680px){.thead,.team-row{grid-template-columns:minmax(0,1.2fr) .8fr 82px}}
-    @media(max-width:390px){.thead,.team-row{grid-template-columns:minmax(0,1.1fr) .7fr 72px}}
+    .thead,.team-row{grid-template-columns:minmax(140px,1.35fr) .9fr 100px 120px}
+    @media(max-width:900px){.thead,.team-row{grid-template-columns:minmax(115px,1.2fr) .75fr 78px 96px}}
+    @media(max-width:680px){.thead,.team-row{grid-template-columns:minmax(100px,1.15fr) .7fr 68px 78px}}
+    @media(max-width:390px){.thead,.team-row{grid-template-columns:minmax(82px,1.1fr) .7fr 58px 68px}}
+    .team-row{display:block;padding:0;border-radius:0;background:#fff}
+    .team-summary{min-height:64px;display:grid;grid-template-columns:minmax(140px,1.35fr) .9fr 100px 120px;gap:12px;align-items:center;padding:0 20px;cursor:pointer;list-style:none}
+    .team-summary::-webkit-details-marker{display:none}.team-summary:focus-visible{outline:2px solid var(--green);outline-offset:-2px}
+    .team-primary{min-width:0}.team-meta{display:block;color:var(--muted);font-size:10px;margin:4px 0 0 35px}.team-expand{font-size:10px;color:var(--green);font-weight:600}
+    .lineup{padding:10px 20px 16px 55px;background:#fafbf8;border-top:1px solid var(--line)}
+    .lineup-head,.lineup-player{display:grid;grid-template-columns:minmax(160px,1fr) 100px 90px 90px;gap:12px;align-items:center}
+    .lineup-head{font:9px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:7px}
+    .lineup-player{min-height:31px;border-top:1px solid #edf0eb;font-size:11px}.lineup-name{font-weight:600}.lineup-pos{font:10px var(--mono);color:var(--muted);margin-right:8px}.lineup-status{font-size:10px;color:var(--muted)}.lineup-status.played{color:var(--green);font-weight:600}
+    .projection-edit{width:76px;border:1px solid var(--line);border-radius:5px;background:white;padding:4px 5px;text-align:right;font:11px var(--mono);color:var(--ink)}.projection-edit:focus{outline:2px solid #8ac39d;border-color:var(--green)}.projection-edit:disabled{border-color:transparent;background:transparent;color:var(--muted)}
+    .reset-projections{border:1px solid var(--line);background:white;color:var(--ink);border-radius:8px;padding:9px 12px;font-size:11px;font-weight:600}.reset-projections[hidden]{display:none}.projection-hint{font-size:10px;color:var(--muted);margin-top:5px}
+    @media(max-width:900px){.team-summary{grid-template-columns:minmax(115px,1.2fr) .75fr 78px 96px;gap:8px;padding:0 14px}.lineup{padding-left:40px}.lineup-head,.lineup-player{grid-template-columns:minmax(130px,1fr) 75px 70px 70px;gap:8px}}
+    @media(max-width:680px){.team-summary{grid-template-columns:minmax(100px,1.15fr) .7fr 68px 78px;padding:0 10px;gap:5px}.team-meta{font-size:9px;margin-left:26px}.lineup{padding:9px 10px}.lineup-head,.lineup-player{grid-template-columns:minmax(112px,1fr) 58px 60px 60px;gap:5px}.lineup-head{font-size:8px}.lineup-player{font-size:10px}}
+    @media(max-width:390px){.team-summary{grid-template-columns:minmax(82px,1.1fr) .7fr 58px 68px;padding:0 8px;gap:4px}.lineup-head,.lineup-player{grid-template-columns:minmax(96px,1fr) 48px 52px 52px;gap:4px}}
   </style>
 </head>
 <body data-static-snapshot="false">
@@ -31,21 +44,18 @@
     </header>
     <main>
       <section class="hero">
-        <div><div class="eyebrow">Season 2026 · weekly elimination</div><h1>Who’s in the danger zone?</h1><p class="subtitle">Odds of finishing last across the active league, using ESPN’s weekly projections.</p></div>
-        <div class="controls">
-          <label class="select-wrap"><select id="week" aria-label="Scoring week"><option value="">Current ESPN week</option></select></label>
-          <button class="refresh" id="refresh"><span aria-hidden="true">↻</span> Refresh odds</button>
-        </div>
+        <div><div class="eyebrow">Season 2026 · weekly elimination</div><h1>Who’s in the danger zone?</h1><p class="subtitle">Live scores and last-place odds, using ESPN projections for the rest of the week.</p></div>
+        <div class="controls"><button class="reset-projections" id="reset-projections" hidden>Reset projections</button><button class="refresh" id="refresh"><span aria-hidden="true">↻</span> Refresh odds</button></div>
       </section>
       <section class="strip" id="summary">
         <div class="stat"><div class="label">Current elimination favorite</div><div class="stat-value small" id="stat-danger">Loading league…</div><div class="stat-hint" id="stat-danger-sub">Fetching roster & projection data</div></div>
         <div class="stat"><div class="label">Teams in the field</div><div class="stat-value" id="stat-teams">—</div><div class="stat-hint">Active rosters found</div></div>
         <div class="stat"><div class="label">Median projection</div><div class="stat-value" id="stat-median">—</div><div class="stat-hint">ESPN starter points</div></div>
-        <div class="stat"><div class="label">Simulations</div><div class="stat-value">50k</div><div class="stat-hint">Independent player outcomes</div></div>
+        <div class="stat"><div class="label">Simulations</div><div class="stat-value">50k</div><div class="stat-hint">Possible final team scores</div></div>
       </section>
       <section class="content">
         <div class="panel">
-          <div class="panel-head"><div><div class="panel-title">Elimination board</div><div class="panel-note" id="board-note">Sorted by chance to finish last</div></div><div class="sort-label">Last place % ↓</div></div>
+          <div class="panel-head"><div><div class="panel-title">Elimination board</div><div class="panel-note" id="board-note">Sorted by chance to finish last</div><div class="projection-hint">Expand a lineup to edit projections. Odds recalculate locally.</div></div><div class="sort-label">Last place % ↓</div></div>
           <div id="board">
             <div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
             <div class="loading-row"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
@@ -59,27 +69,86 @@
             <div class="spot-number" id="spot-number">—%</div><div class="spot-copy" id="spot-copy">A team’s last-place probability is estimated over thousands of possible scoring outcomes.</div>
             <div class="spot-foot"><span>Projected points</span><span id="spot-proj">—</span></div>
           </section>
-          <section class="panel method"><div class="method-title">How to read this</div><p>Each row shows the chance that team is the lowest scorer this week. ESPN projections set the expected points; score variation creates the range of simulated outcomes.</p><span class="chip"><span class="chip-dot"></span> Provisional model</span></section>
         </aside>
       </section>
       <footer class="footer"><span id="updated">Waiting for first refresh</span><span>Read-only · Data from ESPN Fantasy</span></footer>
     </main>
   </div>
   <script>
-    const weekSelect = document.getElementById('week');
     const refreshButton = document.getElementById('refresh');
+    const resetProjectionsButton = document.getElementById('reset-projections');
     const board = document.getElementById('board');
     const fmt = n => Number(n).toFixed(1);
     const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const projectionOverrides = new Map();
+    let latestData = null;
+    const POSITION_SD = {QB:8.0,RB:7.0,WR:7.0,TE:5.0,K:4.0,'D/ST':6.0};
+    const overrideKey = (team, playerIndex) => `${encodeURIComponent(team)}:${playerIndex}`;
+
+    function seededRandom(seed) {
+      return () => {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ t >>> 15, t | 1);
+        t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    function normalRandom(random) {
+      const u = Math.max(random(), 1e-12);
+      const v = random();
+      return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+    }
+
+    function applyProjectionOverrides(sourceTeams, week) {
+      const teams = sourceTeams.map(team => {
+        const lineup = team.lineup || [];
+        const actual = Math.max(0, Number(team.actual_points) || 0);
+        const baseProjection = Number(team.display_projected_points ?? team.projected_points) || 0;
+        let adjustment = 0;
+        let variance = 0;
+        lineup.forEach((player, index) => {
+          if (player.has_played) return;
+          const key = overrideKey(team.team, index);
+          const projection = projectionOverrides.has(key) ? projectionOverrides.get(key) : Number(player.projection) || 0;
+          adjustment += projection - (Number(player.projection) || 0);
+          variance += (POSITION_SD[player.position] || 7.0) ** 2;
+        });
+        return {...team, display_projected_points:Math.max(actual, baseProjection + adjustment), _manualSigma:Math.sqrt(variance)};
+      });
+      const random = seededRandom(19790327 + Number(week || 0));
+      const counts = new Array(teams.length).fill(0);
+      const simulations = 20000;
+      for (let iteration = 0; iteration < simulations; iteration++) {
+        let scores = new Array(teams.length);
+        let lowest = Infinity;
+        for (let index = 0; index < teams.length; index++) {
+          const team = teams[index];
+          const actual = Math.max(0, Number(team.actual_points) || 0);
+          const score = Math.max(actual, team.display_projected_points + normalRandom(random) * team._manualSigma);
+          scores[index] = score;
+          if (score < lowest) lowest = score;
+        }
+        const tied = [];
+        for (let index = 0; index < scores.length; index++) if (Math.abs(scores[index] - lowest) < 1e-9) tied.push(index);
+        for (const index of tied) counts[index] += 1 / tied.length;
+      }
+      return teams.map((team,index) => {
+        const { _manualSigma, ...output } = team;
+        return {...output, last_place_probability:100 * counts[index] / simulations};
+      }).sort((a,b) => b.last_place_probability - a.last_place_probability);
+    }
 
     async function loadOdds() {
+      if (location.protocol === 'file:') {
+        renderLocalServerMessage();
+        return;
+      }
       const staticSnapshot = document.body.dataset.staticSnapshot === 'true';
       refreshButton.disabled = true;
       refreshButton.innerHTML = staticSnapshot ? '<span aria-hidden="true">↻</span> Loading snapshot…' : '<span aria-hidden="true">↻</span> Calculating…';
-      const week = weekSelect.value;
-      const query = week ? `?week=${encodeURIComponent(week)}` : '';
       try {
-        const response = await fetch(staticSnapshot ? './odds.json' : `/api/odds${query}`, {cache:'no-store'});
+        const response = await fetch(staticSnapshot ? './odds.json' : '/api/odds', {cache:'no-store'});
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not load ESPN data.');
         render(data);
@@ -92,38 +161,48 @@
     }
 
     function render(data) {
-      const teams = data.teams || [];
+      latestData = data;
+      const expandedTeams = new Set([...board.querySelectorAll('details[open]')].map(row => row.dataset.team));
+      const sourceTeams = data.teams || [];
+      const teams = projectionOverrides.size ? applyProjectionOverrides(sourceTeams, data.week) : sourceTeams;
       if (!teams.length) return renderError('No active team projections were returned for this scoring period.');
+      resetProjectionsButton.hidden = projectionOverrides.size === 0;
       const maxRisk = Math.max(...teams.map(t => t.last_place_probability), 1);
-      const median = [...teams].map(t => t.projected_points).sort((a,b)=>a-b)[Math.floor(teams.length/2)];
+      const median = [...teams].map(t => t.display_projected_points ?? t.projected_points).sort((a,b)=>a-b)[Math.floor(teams.length/2)];
       const leader = teams[0];
       document.getElementById('stat-danger').textContent = leader.team;
       document.getElementById('stat-danger-sub').textContent = `${fmt(leader.last_place_probability)}% chance to finish last`;
       document.getElementById('stat-teams').textContent = teams.length;
       document.getElementById('stat-median').textContent = fmt(median);
-      document.getElementById('board-note').textContent = `Week ${data.week} · ${teams.length} teams · Sorted by chance to finish last`;
+      const live = data.live_scoring_active ? ' · Live scoring' : '';
+      const adjustmentNote = projectionOverrides.size ? ` · ${projectionOverrides.size} manual ${projectionOverrides.size === 1 ? 'change' : 'changes'} (local)` : '';
+      document.getElementById('board-note').textContent = `Week ${data.week} · ${teams.length} teams${live} · Sorted by chance to finish last${adjustmentNote}`;
       document.getElementById('spot-title').textContent = 'Highest elimination risk';
       document.getElementById('spot-name').textContent = leader.team;
       document.getElementById('spot-number').textContent = `${fmt(leader.last_place_probability)}%`;
       document.getElementById('spot-copy').textContent = `${leader.team} has the largest modeled chance of finishing the week with the league’s lowest score. This is an estimate, not a certainty.`;
-      document.getElementById('spot-proj').textContent = `${fmt(leader.projected_points)} pts`;
+      document.getElementById('spot-proj').textContent = `${fmt(leader.display_projected_points ?? leader.projected_points)} pts`;
       document.getElementById('updated').textContent = `Updated ${new Date(data.calculated_at_utc).toLocaleString()} · Week ${data.week}`;
       if (document.body.dataset.staticSnapshot === 'true') {
-        weekSelect.innerHTML = `<option value="${Number(data.week)}">Week ${Number(data.week)} snapshot</option>`;
-        weekSelect.disabled = true;
         document.getElementById('updated').textContent = `Snapshot generated ${new Date(data.calculated_at_utc).toLocaleString()} · Week ${data.week}`;
         refreshButton.innerHTML = '<span aria-hidden="true">↻</span> Reload snapshot';
-      }
-      if (weekSelect.options.length === 1) {
-        for (let w=1; w<=18; w++) { const o=document.createElement('option'); o.value=String(w); o.textContent=`Week ${w}`; weekSelect.appendChild(o); }
       }
       const rows = teams.map((team,index) => {
         const risk = team.last_place_probability;
         const level = risk >= maxRisk*.72 ? 'risk-high' : risk >= maxRisk*.38 ? 'risk-mid' : '';
         const rankClass = index === 0 ? 'rank first' : 'rank';
-        return `<div class="team-row ${level}"><div class="team-id"><span class="${rankClass}">${String(index+1).padStart(2,'0')}</span><span class="team-name" title="${esc(team.team)}">${esc(team.team)}</span></div><div class="score row-proj">${fmt(team.projected_points)} pts</div><div class="score">${fmt(team.simulated_mean)}</div><div><div class="risk">${fmt(risk)}%</div><div class="bar-bg"><div class="bar" style="width:${Math.max(1,100*risk/maxRisk)}%"></div></div></div></div>`;
+        const projected = team.display_projected_points ?? team.projected_points;
+        const actual = team.actual_points == null ? '—' : `${fmt(team.actual_points)} pts`;
+        const played = team.players_played ?? 0;
+        const remaining = team.players_remaining ?? (team.lineup?.length ?? 0) - played;
+        const lineup = (team.lineup || []).map((player,playerIndex) => {
+          const key = overrideKey(team.team, playerIndex);
+          const projection = projectionOverrides.has(key) ? projectionOverrides.get(key) : Number(player.projection) || 0;
+          return `<div class="lineup-player"><div><span class="lineup-pos">${esc(player.position)}</span><span class="lineup-name">${esc(player.name)}</span></div><span class="lineup-status ${player.has_played ? 'played' : ''}">${player.has_played ? 'Played' : 'Remaining'}</span><span class="score">${player.actual_points == null ? '—' : `${fmt(player.actual_points)} pts`}</span><span><input class="projection-edit" type="number" step="0.1" min="-20" max="100" value="${projection}" data-override-key="${key}" aria-label="Projection for ${esc(player.name)}" ${player.has_played ? 'disabled title="Player has already scored; projection is locked"' : ''}></span></div>`;
+        }).join('');
+        return `<details class="team-row ${level}" data-team="${esc(team.team)}" ${expandedTeams.has(team.team) ? 'open' : ''}><summary class="team-summary"><div class="team-primary"><div class="team-id"><span class="${rankClass}">${String(index+1).padStart(2,'0')}</span><span class="team-name" title="${esc(team.team)}">${esc(team.team)}</span></div><span class="team-meta">${played} played · ${remaining} left <span class="team-expand">· View lineup</span></span></div><div class="score row-proj">${fmt(projected)} pts</div><div class="score">${actual}</div><div><div class="risk">${fmt(risk)}%</div><div class="bar-bg"><div class="bar" style="width:${Math.max(1,100*risk/maxRisk)}%"></div></div></div></summary><div class="lineup"><div class="lineup-head"><span>Player</span><span>Status</span><span>Actual</span><span>Projection</span></div>${lineup || '<div class="lineup-player">Lineup details unavailable</div>'}</div></details>`;
       }).join('');
-      board.innerHTML = `<div class="thead"><span>Active team</span><span>ESPN projection</span><span>Mean score</span><span>Last place</span></div>${rows}`;
+      board.innerHTML = `<div class="thead"><span>Active team</span><span>Projected finish</span><span>Actual so far</span><span>Last place</span></div>${rows}`;
       if (data.warnings && data.warnings.length) {
         document.getElementById('board-note').textContent += ` · ${data.warnings.length} missing player projection${data.warnings.length===1?'':'s'}`;
       }
@@ -137,14 +216,45 @@
       document.getElementById('spot-title').textContent = 'Connect your private league';
       document.getElementById('spot-name').textContent = 'League 2031595556';
       document.getElementById('spot-number').textContent = '—%';
-      document.getElementById('spot-copy').textContent = 'For a private league, add your ESPN session cookies to the local .env file. They are used only in the read-only request to ESPN.';
+      document.getElementById('spot-copy').textContent = 'Check the connection message below, then refresh the ESPN data.';
       document.getElementById('spot-proj').textContent = '—';
-      board.innerHTML = `<div class="empty"><div class="empty-icon">↗</div><h2>League data is not connected yet</h2><p>Add your local ESPN_S2 and ESPN_SWID values to <code>.env</code> in the project folder, then refresh the dashboard.</p><div class="error-box">${esc(message)}</div></div>`;
+      board.innerHTML = `<div class="empty"><div class="empty-icon">↗</div><h2>League data is not connected yet</h2><p>${esc(message)}</p><div class="error-box">${esc(message)}</div></div>`;
       document.getElementById('updated').textContent = 'Waiting for ESPN connection';
     }
 
-    refreshButton.addEventListener('click', loadOdds);
-    weekSelect.addEventListener('change', loadOdds);
+    function renderLocalServerMessage() {
+      document.getElementById('stat-danger').textContent = 'Open local dashboard';
+      document.getElementById('stat-danger-sub').textContent = 'This file cannot connect directly';
+      document.getElementById('stat-teams').textContent = '—';
+      document.getElementById('stat-median').textContent = '—';
+      document.getElementById('spot-title').textContent = 'Use the local server';
+      document.getElementById('spot-name').textContent = 'ESPN access stays on this computer';
+      document.getElementById('spot-number').textContent = '—';
+      document.getElementById('spot-copy').innerHTML = 'Open <a href="http://127.0.0.1:8765/" style="color:#b8e5c9">http://127.0.0.1:8765/</a> after starting the local dashboard server.';
+      document.getElementById('spot-proj').textContent = '—';
+      board.innerHTML = '<div class="empty"><div class="empty-icon">↗</div><h2>Open the dashboard through its local server</h2><p>A <code>file://</code> page cannot reach the ESPN connection running on your computer.</p><div class="error-box">Run <code>python3 dashboard_server.py</code> from the project folder, then open <a href="http://127.0.0.1:8765/">http://127.0.0.1:8765/</a>.</div></div>';
+      document.getElementById('updated').textContent = 'Local server connection required';
+    }
+
+    board.addEventListener('change', event => {
+      const input = event.target.closest('.projection-edit');
+      if (!input || !latestData) return;
+      const value = Number(input.value);
+      if (!Number.isFinite(value)) return;
+      const key = input.dataset.overrideKey;
+      const original = Number(input.defaultValue);
+      if (Math.abs(value - original) < 1e-9) projectionOverrides.delete(key);
+      else projectionOverrides.set(key, value);
+      render(latestData);
+    });
+    resetProjectionsButton.addEventListener('click', () => {
+      projectionOverrides.clear();
+      if (latestData) render(latestData);
+    });
+    refreshButton.addEventListener('click', () => {
+      projectionOverrides.clear();
+      loadOdds();
+    });
     loadOdds();
   </script>
 </body>

@@ -50,7 +50,7 @@ def main() -> int:
     (out / "odds.json").write_text(json.dumps(data, indent=2) + "\n")
     print(f"Static dashboard built in {out}")
     print(f"Week {data['week']}: {len(data['teams'])} active teams")
-    print("The output contains team names, projections, and modeled odds. Review it before publishing.")
+    print("The output contains team names, current scores, projections, and modeled odds. Review it before publishing.")
     return 0
 
 

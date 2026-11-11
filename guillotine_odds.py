@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 import random
 import sys
@@ -32,6 +33,15 @@ class Starter:
     name: str
     position: str
     projection: float
+    actual_points: float | None = None
+    has_played: bool = False
+
+
+@dataclass
+class Team:
+    team_id: int
+    name: str
+    starters: list[Starter]
 
 
 def load_dotenv() -> None:
@@ -49,7 +59,7 @@ def load_dotenv() -> None:
 
 def fetch_json(url: str) -> dict:
     headers = {"User-Agent": "GuillotineOdds/0.1 (personal read-only tool)", "Accept": "application/json"}
-    s2, swid = (os.getenv("ESPN_S2") or "").strip(), (os.getenv("ESPN_SWID") or "").strip()
+    s2, swid = os.getenv("ESPN_S2"), os.getenv("ESPN_SWID")
     if s2 and swid:
         headers["Cookie"] = f"espn_s2={s2}; SWID={swid}"
     request = urllib.request.Request(url, headers=headers)
@@ -101,14 +111,16 @@ def position_for(entry: dict) -> str:
     return POSITION_NAMES.get(position, "FLEX")
 
 
-def extract_teams(data: dict, week: int) -> tuple[list[tuple[str, list[Starter]]], list[str]]:
+def extract_teams(data: dict, week: int, live_rosters: dict[int, list[dict]] | None = None) -> tuple[list[Team], list[str]]:
     teams = []
     warnings = []
     for team in data.get("teams", []) or []:
         team_name = team.get("name") or f"Team {team.get('id', '?')}"
         starters = []
         roster = team.get("roster") or {}
-        for entry in roster.get("entries", []) or []:
+        live_entries = (live_rosters or {}).get(int(team.get("id", 0)), [])
+        entries = roster.get("entries", []) or []
+        for entry_index, entry in enumerate(entries):
             slot = entry.get("lineupSlotId")
             if slot in BENCH_SLOT_IDS:
                 continue
@@ -117,24 +129,115 @@ def extract_teams(data: dict, week: int) -> tuple[list[tuple[str, list[Starter]]
             projection = get_projection(entry, week)
             if projection is None:
                 warnings.append(f"No week {week} projection found for {player.get('fullName', 'unknown player')} on {team_name}.")
-                continue
-            starters.append(Starter(player.get("fullName", f"Player {player.get('id', '?')}"), position_for(entry), projection))
+                projection = 0.0
+            live_entry = live_entries[entry_index] if entry_index < len(live_entries) else {}
+            if live_entry.get("lineup_slot_id") != slot:
+                live_entry = {}
+            actual_points = live_entry.get("actual_points")
+            starters.append(Starter(
+                player.get("fullName", f"Player {player.get('id', '?')}"),
+                position_for(entry),
+                projection,
+                actual_points,
+                bool(live_entry.get("has_played")),
+            ))
         if starters:
-            teams.append((team_name, starters))
+            teams.append(Team(int(team.get("id", 0)), team_name, starters))
     return teams, warnings
 
 
-def simulate(teams: list[tuple[str, list[Starter]]], simulations: int, seed: int | None) -> list[dict]:
+def extract_live_scores(data: dict, week: int) -> dict[int, dict[str, float | None]]:
+    """Read current and live-projected team totals from ESPN's matchup score view."""
+    scores: dict[int, dict[str, float | None]] = {}
+    for matchup in data.get("schedule", []) or []:
+        try:
+            if int(matchup.get("matchupPeriodId", -1)) != week:
+                continue
+        except (TypeError, ValueError):
+            continue
+
+        sides = matchup.get("teams") or []
+        if not sides:
+            sides = [side for side in (matchup.get("home"), matchup.get("away")) if side]
+        for side in sides:
+            team_id = side.get("teamId")
+            if team_id is None:
+                continue
+            actual = side.get("totalPoints")
+            live_projection = side.get("totalProjectedPointsLive")
+            scores[int(team_id)] = {
+                "actual_points": float(actual) if actual is not None else None,
+                "live_projected_points": float(live_projection) if live_projection is not None else None,
+            }
+    return scores
+
+
+def extract_live_rosters(data: dict, week: int) -> dict[int, list[dict]]:
+    """Read actual individual scores from ESPN's current matchup rosters."""
+    rosters: dict[int, list[dict]] = {}
+    for matchup in data.get("schedule", []) or []:
+        try:
+            if int(matchup.get("matchupPeriodId", -1)) != week:
+                continue
+        except (TypeError, ValueError):
+            continue
+        for side in matchup.get("teams") or []:
+            try:
+                team_id = int(side.get("teamId"))
+            except (TypeError, ValueError):
+                continue
+            roster = (side.get("rosterForCurrentScoringPeriod") or {}).get("entries") or []
+            player_rows = []
+            for entry in roster:
+                player = ((entry.get("playerPoolEntry") or {}).get("player") or {})
+                stats = player.get("stats") or []
+                if isinstance(stats, dict):
+                    stats = list(stats.values())
+                actual = next((stat for stat in stats
+                               if stat.get("scoringPeriodId") == week
+                               and str(stat.get("statSourceId")) == "0"), None)
+                player_rows.append({
+                    "lineup_slot_id": entry.get("lineupSlotId"),
+                    "has_played": actual is not None,
+                    "actual_points": float(actual.get("appliedTotal", 0)) if actual else None,
+                })
+            rosters[team_id] = player_rows
+    return rosters
+
+
+def simulate(teams: list[Team], live_scores: dict[int, dict[str, float | None]], simulations: int, seed: int | None) -> list[dict]:
     rng = random.Random(seed)
     last_count: defaultdict[str, int] = defaultdict(int)
     score_sum: defaultdict[str, float] = defaultdict(float)
+    projections: dict[str, float] = {}
+    score_sigmas: dict[str, float] = {}
+    actual_scores: dict[str, float | None] = {}
+    live_projected_scores: dict[str, float | None] = {}
+
+    for team in teams:
+        pregame_projection = sum(player.projection for player in team.starters)
+        score_data = live_scores.get(team.team_id, {})
+        actual = score_data.get("actual_points")
+        live_projection = score_data.get("live_projected_points")
+        # ESPN publishes its live team projection while games are underway. Use it
+        # as the simulation mean, and reduce uncertainty as the remaining projected
+        # points shrink. Before kickoff, retain the regular player-projection model.
+        projections[team.name] = (
+            max(live_projection, actual) if actual is not None else live_projection
+        ) if live_projection is not None else pregame_projection
+        base_sigma = math.sqrt(sum(POSITION_SD.get(p.position, 7.0) ** 2 for p in team.starters))
+        if live_projection is not None and actual is not None:
+            remaining_fraction = max(0.0, min(1.0, (projections[team.name] - actual) / max(projections[team.name], 1.0)))
+            base_sigma *= math.sqrt(remaining_fraction)
+        score_sigmas[team.name] = base_sigma
+        actual_scores[team.name] = actual
+        live_projected_scores[team.name] = projections[team.name] if live_projection is not None else None
+
     for _ in range(simulations):
         scores = {}
-        for name, players in teams:
-            score = 0.0
-            for player in players:
-                sd = POSITION_SD.get(player.position, 7.0)
-                score += rng.gauss(player.projection, sd)
+        for team in teams:
+            name = team.name
+            score = rng.gauss(projections[name], score_sigmas[name])
             scores[name] = score
             score_sum[name] += score
         low = min(scores.values())
@@ -143,10 +246,22 @@ def simulate(teams: list[tuple[str, list[Starter]]], simulations: int, seed: int
         for name in tied:
             last_count[name] += 1 / len(tied)
     return sorted(
-        ({"team": name, "projected_points": round(sum(p.projection for p in players), 2),
-          "simulated_mean": round(score_sum[name] / simulations, 2),
-          "last_place_probability": round(100 * last_count[name] / simulations, 2)}
-         for name, players in teams),
+        ({"team": team.name,
+          "projected_points": round(sum(p.projection for p in team.starters), 2),
+          "live_projected_points": round(live_projected_scores[team.name], 2) if live_projected_scores[team.name] is not None else None,
+          "display_projected_points": round(projections[team.name], 2),
+          "actual_points": round(actual_scores[team.name], 2) if actual_scores[team.name] is not None else None,
+          "players_played": sum(1 for player in team.starters if player.has_played),
+          "players_remaining": sum(1 for player in team.starters if not player.has_played),
+          "lineup": [{"name": player.name,
+                      "position": player.position,
+                      "projection": round(player.projection, 2),
+                      "actual_points": round(player.actual_points, 2) if player.actual_points is not None else None,
+                      "has_played": player.has_played}
+                     for player in team.starters],
+          "simulated_mean": round(score_sum[team.name] / simulations, 2),
+          "last_place_probability": round(100 * last_count[team.name] / simulations, 2)}
+         for team in teams),
         key=lambda row: row["last_place_probability"], reverse=True,
     )
 
@@ -167,6 +282,7 @@ def main() -> int:
         raise RuntimeError("Could not determine ESPN scoring period. Pass --week N.")
     week = int(week)
     projections = fetch_json(league_url(args.season, args.league, ["kona_player_info"], {"scoringPeriodId": str(week)}))
+    live_data = fetch_json(league_url(args.season, args.league, ["mMatchupScore"], {"scoringPeriodId": str(week), "matchupPeriodId": str(week)}))
     # Most responses contain a players array; some league-context responses instead
     # place stats directly on roster entries. Merge player info into roster entries.
     projection_players = {}
@@ -183,7 +299,9 @@ def main() -> int:
                 if pid in projection_players:
                     entry["playerPoolEntry"] = projection_players[pid]
 
-    teams, warnings = extract_teams(league, week)
+    live_scores = extract_live_scores(live_data, week)
+    live_rosters = extract_live_rosters(live_data, week)
+    teams, warnings = extract_teams(league, week, live_rosters)
     if not teams:
         raise RuntimeError("No active rosters were found. ESPN may have returned a different response shape; save/inspect the JSON before adapting the parser.")
     result = {
@@ -193,7 +311,8 @@ def main() -> int:
         "calculated_at_utc": datetime.now(timezone.utc).isoformat(),
         "simulations": args.simulations,
         "model_note": "Provisional position-level standard deviations; replace with historical ESPN projection residuals for calibrated odds.",
-        "teams": simulate(teams, args.simulations, args.seed),
+        "live_scoring_active": any((score.get("actual_points") or 0) > 0 for score in live_scores.values()),
+        "teams": simulate(teams, live_scores, args.simulations, args.seed),
         "warnings": warnings,
     }
     print(json.dumps(result, indent=2))

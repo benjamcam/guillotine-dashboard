@@ -2,11 +2,11 @@
 
 Live site: https://benjamcam.github.io/guillotine-dashboard/
 
-This public GitHub Pages site shows a point-in-time estimate of which active ESPN Fantasy team has the highest chance of scoring lowest in the current guillotine week. The estimate uses ESPN's weekly player projections and a provisional score-variance model.
+This public GitHub Pages site shows a point-in-time estimate of which active ESPN Fantasy team has the highest chance of scoring lowest in the current guillotine week. It includes current actual points, live team projections, and lineup details from ESPN, along with a provisional score-variance model.
 
 ## Automatic refresh
 
-A GitHub Actions workflow is configured to check ESPN every 30 minutes (at minutes 17 and 47 UTC) and publish a fresh static snapshot when projections are available. Scheduled runs can be delayed by GitHub. The dashboard does not connect to ESPN from a visitor's browser.
+A GitHub Actions workflow checks ESPN every 15 minutes and publishes a fresh static snapshot when projections are available. Scheduled runs can be delayed by GitHub. The dashboard does not connect to ESPN from a visitor's browser.
 
 For refreshes to work, the repository owner must add two repository Actions secrets:
 
@@ -18,3 +18,7 @@ Add them in **Settings → Secrets and variables → Actions → New repository 
 ## Model note
 
 The ESPN projections set expected points. Player score uncertainty currently uses provisional position-level standard deviations, so last-place percentages are estimates and are not calibrated guarantees.
+
+## Lineups and projection what-if
+
+Expand a team row to see its starters, actual points, projections, and played/remaining status. Edit a projection to recalculate and resort all teams' last-place percentages in the browser. These what-if edits are temporary, stay in the current page, and are cleared by refreshing ESPN data. Players who have already scored have locked projections. No changes are written to ESPN.
