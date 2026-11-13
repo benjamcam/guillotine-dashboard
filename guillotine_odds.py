@@ -198,6 +198,7 @@ def extract_live_rosters(data: dict, week: int) -> dict[int, list[dict]]:
                                and str(stat.get("statSourceId")) == "0"), None)
                 player_rows.append({
                     "lineup_slot_id": entry.get("lineupSlotId"),
+                    "counts_for_team": entry.get("lineupSlotId") not in BENCH_SLOT_IDS,
                     "has_played": actual is not None,
                     "actual_points": float(actual.get("appliedTotal", 0)) if actual else None,
                 })
@@ -301,6 +302,18 @@ def main() -> int:
 
     live_scores = extract_live_scores(live_data, week)
     live_rosters = extract_live_rosters(live_data, week)
+    # Some ESPN mMatchupScore responses omit the team-level totalPoints even
+    # though player stats are present. Rebuild that total from actual starters
+    # only; bench scores must never count toward a team's total.
+    for team_id, player_rows in live_rosters.items():
+        score = live_scores.setdefault(team_id, {})
+        if score.get("actual_points") is not None:
+            continue
+        played_starters = [row for row in player_rows
+                           if row.get("counts_for_team") and row.get("has_played")
+                           and row.get("actual_points") is not None]
+        if played_starters:
+            score["actual_points"] = sum(row["actual_points"] for row in played_starters)
     teams, warnings = extract_teams(league, week, live_rosters)
     if not teams:
         raise RuntimeError("No active rosters were found. ESPN may have returned a different response shape; save/inspect the JSON before adapting the parser.")
