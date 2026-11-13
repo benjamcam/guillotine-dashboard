@@ -111,16 +111,16 @@ def position_for(entry: dict) -> str:
     return POSITION_NAMES.get(position, "FLEX")
 
 
-def extract_teams(data: dict, week: int, live_rosters: dict[int, list[dict]] | None = None) -> tuple[list[Team], list[str]]:
+def extract_teams(data: dict, week: int, live_rosters: dict[int, dict[int, dict]] | None = None) -> tuple[list[Team], list[str]]:
     teams = []
     warnings = []
     for team in data.get("teams", []) or []:
         team_name = team.get("name") or f"Team {team.get('id', '?')}"
         starters = []
         roster = team.get("roster") or {}
-        live_entries = (live_rosters or {}).get(int(team.get("id", 0)), [])
+        live_entries = (live_rosters or {}).get(int(team.get("id", 0)), {})
         entries = roster.get("entries", []) or []
-        for entry_index, entry in enumerate(entries):
+        for entry in entries:
             slot = entry.get("lineupSlotId")
             if slot in BENCH_SLOT_IDS:
                 continue
@@ -130,9 +130,7 @@ def extract_teams(data: dict, week: int, live_rosters: dict[int, list[dict]] | N
             if projection is None:
                 warnings.append(f"No week {week} projection found for {player.get('fullName', 'unknown player')} on {team_name}.")
                 projection = 0.0
-            live_entry = live_entries[entry_index] if entry_index < len(live_entries) else {}
-            if live_entry.get("lineup_slot_id") != slot:
-                live_entry = {}
+            live_entry = live_entries.get(int(player.get("id") or -1), {})
             actual_points = live_entry.get("actual_points")
             starters.append(Starter(
                 player.get("fullName", f"Player {player.get('id', '?')}"),
@@ -146,62 +144,66 @@ def extract_teams(data: dict, week: int, live_rosters: dict[int, list[dict]] | N
     return teams, warnings
 
 
-def extract_live_scores(data: dict, week: int) -> dict[int, dict[str, float | None]]:
-    """Read current and live-projected team totals from ESPN's matchup score view."""
-    scores: dict[int, dict[str, float | None]] = {}
-    for matchup in data.get("schedule", []) or []:
-        try:
-            if int(matchup.get("matchupPeriodId", -1)) != week:
-                continue
-        except (TypeError, ValueError):
-            continue
+def matchup_sides(matchup: dict) -> list[dict]:
+    return matchup.get("teams") or [side for side in (matchup.get("home"), matchup.get("away")) if side]
 
-        sides = matchup.get("teams") or []
-        if not sides:
-            sides = [side for side in (matchup.get("home"), matchup.get("away")) if side]
-        for side in sides:
-            team_id = side.get("teamId")
-            if team_id is None:
+
+def current_matchups(data: dict, week: int) -> list[dict]:
+    schedule = data.get("schedule") or []
+    def matches(matchup: dict, field: str) -> bool:
+        try:
+            return int(matchup.get(field)) == week
+        except (TypeError, ValueError):
+            return False
+    exact = [m for m in schedule if matches(m, "scoringPeriodId")]
+    return exact if exact else [m for m in schedule if matches(m, "matchupPeriodId")]
+
+
+def extract_live_scores(data: dict, week: int) -> dict[int, dict[str, float | None]]:
+    scores: dict[int, dict[str, float | None]] = {}
+    for matchup in current_matchups(data, week):
+        for side in matchup_sides(matchup):
+            try:
+                team_id = int(side["teamId"])
+            except (KeyError, TypeError, ValueError):
                 continue
             actual = side.get("totalPoints")
-            live_projection = side.get("totalProjectedPointsLive")
-            scores[int(team_id)] = {
+            projected = side.get("totalProjectedPointsLive")
+            scores[team_id] = {
                 "actual_points": float(actual) if actual is not None else None,
-                "live_projected_points": float(live_projection) if live_projection is not None else None,
+                "live_projected_points": float(projected) if projected is not None else None,
             }
     return scores
 
 
-def extract_live_rosters(data: dict, week: int) -> dict[int, list[dict]]:
-    """Read actual individual scores from ESPN's current matchup rosters."""
-    rosters: dict[int, list[dict]] = {}
-    for matchup in data.get("schedule", []) or []:
-        try:
-            if int(matchup.get("matchupPeriodId", -1)) != week:
-                continue
-        except (TypeError, ValueError):
-            continue
-        for side in matchup.get("teams") or []:
+def extract_live_rosters(data: dict, week: int) -> dict[int, dict[int, dict]]:
+    rosters: dict[int, dict[int, dict]] = {}
+    for matchup in current_matchups(data, week):
+        for side in matchup_sides(matchup):
             try:
-                team_id = int(side.get("teamId"))
-            except (TypeError, ValueError):
+                team_id = int(side["teamId"])
+            except (KeyError, TypeError, ValueError):
                 continue
-            roster = (side.get("rosterForCurrentScoringPeriod") or {}).get("entries") or []
-            player_rows = []
+            roster = (side.get("rosterForCurrentScoringPeriod") or side.get("rosterForMatchupPeriod") or {}).get("entries") or []
+            players: dict[int, dict] = {}
             for entry in roster:
-                player = ((entry.get("playerPoolEntry") or {}).get("player") or {})
-                stats = player.get("stats") or []
+                pool = entry.get("playerPoolEntry") or {}
+                player = pool.get("player") or {}
+                pid = player.get("id") or entry.get("playerId")
+                if pid is None:
+                    continue
+                stats = pool.get("stats") or player.get("stats") or []
                 if isinstance(stats, dict):
                     stats = list(stats.values())
                 actual = next((stat for stat in stats
-                               if stat.get("scoringPeriodId") == week
+                               if str(stat.get("scoringPeriodId")) == str(week)
                                and str(stat.get("statSourceId")) == "0"), None)
-                player_rows.append({
+                players[int(pid)] = {
                     "lineup_slot_id": entry.get("lineupSlotId"),
                     "has_played": actual is not None,
-                    "actual_points": float(actual.get("appliedTotal", 0)) if actual else None,
-                })
-            rosters[team_id] = player_rows
+                    "actual_points": float(actual["appliedTotal"]) if actual and actual.get("appliedTotal") is not None else None,
+                }
+            rosters[team_id] = players
     return rosters
 
 
@@ -302,6 +304,14 @@ def main() -> int:
     live_scores = extract_live_scores(live_data, week)
     live_rosters = extract_live_rosters(live_data, week)
     teams, warnings = extract_teams(league, week, live_rosters)
+    for team in teams:
+        score = live_scores.setdefault(team.team_id, {"actual_points": None, "live_projected_points": None})
+        if score["actual_points"] is None:
+            starter_points = [p.actual_points for p in team.starters]
+            if starter_points and all(value is not None for value in starter_points):
+                score["actual_points"] = sum(starter_points)
+            elif any(value is not None for value in starter_points):
+                warnings.append(f"Incomplete actual score for {team.name}; ESPN team total unavailable.")
     if not teams:
         raise RuntimeError("No active rosters were found. ESPN may have returned a different response shape; save/inspect the JSON before adapting the parser.")
     result = {
