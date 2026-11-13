@@ -219,6 +219,13 @@ def simulate(teams: list[Team], live_scores: dict[int, dict[str, float | None]],
         pregame_projection = sum(player.projection for player in team.starters)
         score_data = live_scores.get(team.team_id, {})
         actual = score_data.get("actual_points")
+        if actual is None:
+            # Fall back to actual starter scores also shown in the lineup.
+            # This covers ESPN responses with player actuals but no team total.
+            played_scores = [player.actual_points for player in team.starters
+                             if player.has_played and player.actual_points is not None]
+            if played_scores:
+                actual = sum(played_scores)
         live_projection = score_data.get("live_projected_points")
         # ESPN publishes its live team projection while games are underway. Use it
         # as the simulation mean, and reduce uncertainty as the remaining projected
