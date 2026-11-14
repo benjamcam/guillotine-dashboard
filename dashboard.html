@@ -204,7 +204,12 @@
         const level = risk >= maxRisk*.72 ? 'risk-high' : risk >= maxRisk*.38 ? 'risk-mid' : '';
         const rankClass = index === 0 ? 'rank first' : 'rank';
         const projected = team.display_projected_points ?? team.projected_points;
-        const actual = team.actual_points == null ? '—' : `${fmt(team.actual_points)} pts`;
+        const lineupActual = (team.lineup || []).reduce((sum, player) => {
+          return player.has_played && player.actual_points != null ? sum + (Number(player.actual_points) || 0) : sum;
+        }, 0);
+        const hasLineupActual = (team.lineup || []).some(player => player.has_played && player.actual_points != null);
+        const actualPoints = team.actual_points == null && hasLineupActual ? lineupActual : team.actual_points;
+        const actual = actualPoints == null ? '—' : `${fmt(actualPoints)} pts`;
         const played = team.players_played ?? 0;
         const remaining = team.players_remaining ?? (team.lineup?.length ?? 0) - played;
         const lineup = (team.lineup || []).map((player,playerIndex) => {
