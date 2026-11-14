@@ -1,5 +1,14 @@
 name: Refresh ESPN projections and publish dashboard
 on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/refresh-dashboard.yml"
+      - "build_snapshot.py"
+      - "dashboard.html"
+      - "guillotine_odds.py"
+      - "test_actual_totals.py"
+      - "test_dashboard_actuals.js"
   schedule:
     # Refresh every 15 minutes.
     - cron: '*/15 * * * *'
@@ -27,6 +36,10 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Test actual score fallback before deployment
+        run: |
+          python -m unittest -v test_actual_totals
+          node test_dashboard_actuals.js
       - name: Verify ESPN secrets are configured
         id: credentials
         run: |
