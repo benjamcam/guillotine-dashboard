@@ -44,6 +44,18 @@ class Team:
     starters: list[Starter]
 
 
+def actual_team_total(team: Team, reported_total: float | None) -> float | None:
+    """Use starter scores when ESPN's team total is absent or stale at zero."""
+    scored_starters = [player.actual_points for player in team.starters
+                       if player.actual_points is not None]
+    lineup_total = sum(scored_starters) if scored_starters else None
+    if reported_total is None:
+        return lineup_total
+    if reported_total == 0 and lineup_total not in (None, 0):
+        return lineup_total
+    return reported_total
+
+
 def load_dotenv() -> None:
     """Read simple KEY=value lines from .env without an external dependency."""
     path = Path(__file__).with_name(".env")
@@ -218,7 +230,7 @@ def simulate(teams: list[Team], live_scores: dict[int, dict[str, float | None]],
     for team in teams:
         pregame_projection = sum(player.projection for player in team.starters)
         score_data = live_scores.get(team.team_id, {})
-        actual = score_data.get("actual_points")
+        actual = actual_team_total(team, score_data.get("actual_points"))
         if actual is None:
             # Fall back to actual starter scores also shown in the lineup.
             # This covers ESPN responses with player actuals but no team total.
