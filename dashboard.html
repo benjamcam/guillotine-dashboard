@@ -208,7 +208,10 @@
           return player.has_played && player.actual_points != null ? sum + (Number(player.actual_points) || 0) : sum;
         }, 0);
         const hasLineupActual = (team.lineup || []).some(player => player.has_played && player.actual_points != null);
-        const actualPoints = team.actual_points == null && hasLineupActual ? lineupActual : team.actual_points;
+        const reportedActual = team.actual_points == null ? null : Number(team.actual_points);
+        const actualPoints = reportedActual == null
+          ? (hasLineupActual ? lineupActual : null)
+          : (reportedActual === 0 && hasLineupActual && lineupActual !== 0 ? lineupActual : reportedActual);
         const actual = actualPoints == null ? '—' : `${fmt(actualPoints)} pts`;
         const played = team.players_played ?? 0;
         const remaining = team.players_remaining ?? (team.lineup?.length ?? 0) - played;
