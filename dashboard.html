@@ -97,6 +97,20 @@
     const POSITION_SD = {QB:8.0,RB:7.0,WR:7.0,TE:5.0,K:4.0,'D/ST':6.0};
     const overrideKey = (team, playerIndex) => `${encodeURIComponent(team)}:${playerIndex}`;
 
+    function actualPointsFor(team) {
+      const scoredStarters = (team.lineup || [])
+        .map(player => player.actual_points)
+        .filter(points => points != null && Number.isFinite(Number(points)))
+        .map(Number);
+      const lineupTotal = scoredStarters.length
+        ? scoredStarters.reduce((sum, points) => sum + points, 0)
+        : null;
+      const reportedTotal = team.actual_points == null ? null : Number(team.actual_points);
+      if (reportedTotal == null) return lineupTotal;
+      if (reportedTotal === 0 && lineupTotal != null && lineupTotal !== 0) return lineupTotal;
+      return reportedTotal;
+    }
+
     function seededRandom(seed) {
       return () => {
         let t = seed += 0x6D2B79F5;
@@ -204,14 +218,7 @@
         const level = risk >= maxRisk*.72 ? 'risk-high' : risk >= maxRisk*.38 ? 'risk-mid' : '';
         const rankClass = index === 0 ? 'rank first' : 'rank';
         const projected = team.display_projected_points ?? team.projected_points;
-        const lineupActual = (team.lineup || []).reduce((sum, player) => {
-          return player.has_played && player.actual_points != null ? sum + (Number(player.actual_points) || 0) : sum;
-        }, 0);
-        const hasLineupActual = (team.lineup || []).some(player => player.has_played && player.actual_points != null);
-        const reportedActual = team.actual_points == null ? null : Number(team.actual_points);
-        const actualPoints = reportedActual == null
-          ? (hasLineupActual ? lineupActual : null)
-          : (reportedActual === 0 && hasLineupActual && lineupActual !== 0 ? lineupActual : reportedActual);
+        const actualPoints = actualPointsFor(team);
         const actual = actualPoints == null ? '—' : `${fmt(actualPoints)} pts`;
         const played = team.players_played ?? 0;
         const remaining = team.players_remaining ?? (team.lineup?.length ?? 0) - played;
